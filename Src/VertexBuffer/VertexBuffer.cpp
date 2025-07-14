@@ -1,4 +1,4 @@
-// Pipeline.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// VertexBuffer.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <windows.h>
@@ -9,7 +9,6 @@
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
-
 
 class Render
 {
@@ -27,8 +26,25 @@ private:
     {
         ID3D11VertexShader* vertexShader = nullptr;
         ID3D11PixelShader* pixelShader = nullptr;
+        ID3D11InputLayout* inputLayout = nullptr;
 
     } pipeline;
+
+
+    struct VertexBuffer
+    {
+        ID3D11Buffer* buffer = nullptr;
+        uint32_t stride =  sizeof(float) * 8;
+        uint32_t offset = { 0 };
+
+    } vertexBuffer;
+
+
+    struct Vertex
+    {
+        float x, y, z, w;
+        float r, g, b, a;
+    };
 
 
 public:
@@ -65,6 +81,7 @@ public:
         renderDevice.deviceContext->OMSetRenderTargets(1, &renderDevice.renderTargetView, nullptr);
 
         CreateShaders();
+        CreateTriangle();
 
     }
     void Loop()
@@ -76,8 +93,11 @@ public:
         D3D11_VIEWPORT view = { 0, 0, m_Width, m_Height, 0.0f, 1.0f };
         renderDevice.deviceContext->RSSetViewports(1, &view);
 
+        renderDevice.deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer.buffer, &vertexBuffer.stride, &vertexBuffer.offset);
 
         renderDevice.deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        renderDevice.deviceContext->IASetInputLayout(pipeline.inputLayout);
+
         renderDevice.deviceContext->VSSetShader(pipeline.vertexShader, nullptr, 0);
         renderDevice.deviceContext->PSSetShader(pipeline.pixelShader, nullptr, 0);
         renderDevice.deviceContext->Draw(3, 0);
@@ -85,7 +105,41 @@ public:
         renderDevice.swapChain->Present(1, 0);
     }
 
+    bool CreateTriangle()
+    {
 
+
+        Vertex vertices[] =
+        {
+            {  0.0f,  0.5f, 0.0f, 1.0f, // POSITION
+                0.9f, 0.0f, 0.0f },     // COLOR
+
+            {  0.5f, -0.5f, 0.0f, 1.0f, // POSITION
+                0.0f, 0.9f, 0.0f, 1.0f,},     // COLOR
+
+            { -0.5f, -0.5f, 0.0f,1.0f,  // POSITION
+                0.0f, 0.0f, 0.9f, 1.0f, }      // COLOR
+        };
+
+        D3D11_BUFFER_DESC bd = {};
+        bd.Usage = D3D11_USAGE_DEFAULT;
+        bd.ByteWidth = sizeof(vertices);
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+        // Fill in the subresource data.
+        D3D11_SUBRESOURCE_DATA initData;
+        initData.pSysMem = vertices;
+        initData.SysMemPitch = 0;
+        initData.SysMemSlicePitch = 0;
+
+        if (FAILED(renderDevice.device->CreateBuffer(&bd, &initData, &vertexBuffer.buffer)))
+        {
+            std::cerr << "Error\n";
+            return false;
+        }
+
+        return true;
+    }
 
 
     bool CreateShaders()
@@ -94,13 +148,20 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/Pipeline/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/Pipeline/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);
         renderDevice.device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pipeline.pixelShader);
-        //renderDevice.device->CreateInputLayout(NULL, 2, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &pipeline.inputLayout);
+
+        D3D11_INPUT_ELEMENT_DESC layout[] =
+        {
+            { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        };
+
+        renderDevice.device->CreateInputLayout(layout, 2, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &pipeline.inputLayout);
 
         vsBlob->Release();
         psBlob->Release();
@@ -113,15 +174,15 @@ public:
     {
         ID3DBlob* errorBlob = nullptr;
         HRESULT hr = D3DCompileFromFile(
-            filename,         
-            nullptr,          
-            nullptr,          
-            entryPoint,       
-            profile,          
-            0,                
-            0,                
-            blob,             
-            &errorBlob        
+            filename,
+            nullptr,
+            nullptr,
+            entryPoint,
+            profile,
+            0,
+            0,
+            blob,
+            &errorBlob
         );
 
         if (FAILED(hr))
@@ -133,7 +194,7 @@ public:
             }
             else
             {
-                std::cerr << "Error" << std::endl;
+                std::cerr << "Error." << std::endl;
             }
             return hr;
         }
@@ -144,7 +205,7 @@ public:
 
     void Cleanup()
     {
-        if (pipeline.vertexShader) 
+        if (pipeline.vertexShader)
             pipeline.vertexShader->Release();
 
         if (pipeline.pixelShader)
@@ -182,7 +243,7 @@ int main()
     Render render = {};
 
     HINSTANCE hInstance = GetModuleHandle(nullptr);
-    const wchar_t CLASS_NAME[] = L"DX11 Pipeline";
+    const wchar_t CLASS_NAME[] = L"DX11 VertexBuffer";
 
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -191,7 +252,7 @@ int main()
 
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 Pipeline",
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 VertexBuffer",
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, render.m_Width, render.m_Height,
         nullptr, nullptr, hInstance, nullptr);
 
