@@ -1,6 +1,5 @@
-// VertexBuffer.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// IndexBuffer.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
 #include <windows.h>
 #include <fstream>
 #include <iostream>
@@ -34,10 +33,18 @@ private:
     struct VertexBuffer
     {
         ID3D11Buffer* buffer = nullptr;
-        uint32_t stride =  sizeof(float) * 8;
+        uint32_t stride = sizeof(float) * 8;
         uint32_t offset = { 0 };
 
     } vertexBuffer;
+
+    struct IndexBuffer
+    {
+        ID3D11Buffer* buffer = nullptr;
+        uint32_t count;
+
+    } indexBuffer;
+
 
 
     struct Vertex
@@ -81,7 +88,7 @@ public:
         renderDevice.deviceContext->OMSetRenderTargets(1, &renderDevice.renderTargetView, nullptr);
 
         CreateShaders();
-        CreateTriangle();
+        CreateMesh();
 
     }
     void Loop()
@@ -94,31 +101,36 @@ public:
         renderDevice.deviceContext->RSSetViewports(1, &view);
 
         renderDevice.deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer.buffer, &vertexBuffer.stride, &vertexBuffer.offset);
+        renderDevice.deviceContext->IASetIndexBuffer(indexBuffer.buffer, DXGI_FORMAT_R32_UINT, 0);
 
         renderDevice.deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         renderDevice.deviceContext->IASetInputLayout(pipeline.inputLayout);
 
         renderDevice.deviceContext->VSSetShader(pipeline.vertexShader, nullptr, 0);
         renderDevice.deviceContext->PSSetShader(pipeline.pixelShader, nullptr, 0);
-        renderDevice.deviceContext->Draw(3, 0);
+        renderDevice.deviceContext->DrawIndexed(indexBuffer.count, 1, 0);
 
         renderDevice.swapChain->Present(1, 0);
     }
 
-    bool CreateTriangle()
+    bool CreateMesh()
     {
 
 
         Vertex vertices[] =
         {
-            {  0.0f,  0.5f, 0.0f, 1.0f, // POSITION
-                0.9f, 0.0f, 0.0f, 1.0f},     // COLOR
+            {  -0.5f, 0.5f, 0.0f, 1.0f, // POSITION
+                0.9f, 0.0f, 0.0f, 1.0f },     // COLOR
 
-            {  0.5f, -0.5f, 0.0f, 1.0f, // POSITION
+            {  0.5f, 0.5f, 0.0f, 1.0f,  // POSITION
                 0.0f, 0.9f, 0.0f, 1.0f,},     // COLOR
 
-            { -0.5f, -0.5f, 0.0f,1.0f,  // POSITION
-                0.0f, 0.0f, 0.9f, 1.0f, }      // COLOR
+            { 0.5f, -0.5f, 0.0f,1.0f,  // POSITION
+                0.0f, 0.0f, 0.9f, 1.0f, },      // COLOR
+
+            { -0.5f, -0.5f, 0.0f, 1.0f,  // POSITION
+              1.0f, 0.0f, 1.0f, 1.0f, }      // COLOR
+
         };
 
         D3D11_BUFFER_DESC vertexBufferDesc = {};
@@ -132,11 +144,42 @@ public:
         initData.SysMemPitch = 0;
         initData.SysMemSlicePitch = 0;
 
-        if (FAILED(renderDevice.device->CreateBuffer(&bd, &initData, &vertexBuffer.buffer)))
+        if (FAILED(renderDevice.device->CreateBuffer(&vertexBufferDesc, &initData, &vertexBuffer.buffer)))
         {
             std::cerr << "Error\n";
             return false;
         }
+
+
+
+
+        uint32_t  indices[] =
+        {
+            0, 1, 2,
+            0, 2, 3
+        };
+
+        indexBuffer.count = 6;
+
+        D3D11_BUFFER_DESC indexBufferDesc = {};
+        indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        indexBufferDesc.ByteWidth = sizeof(indices);
+        indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+        // Fill in the subresource data.
+        D3D11_SUBRESOURCE_DATA initDataIdices;
+        initDataIdices.pSysMem = indices;
+        initDataIdices.SysMemPitch = 0;
+        initDataIdices.SysMemSlicePitch = 0;
+
+        if (FAILED(renderDevice.device->CreateBuffer(&indexBufferDesc, &initDataIdices, &indexBuffer.buffer)))
+        {
+            std::cerr << "Error\n";
+            return false;
+        }
+
+
+
 
         return true;
     }
@@ -148,8 +191,8 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);
@@ -243,7 +286,7 @@ int main()
     Render render = {};
 
     HINSTANCE hInstance = GetModuleHandle(nullptr);
-    const wchar_t CLASS_NAME[] = L"DX11 VertexBuffer";
+    const wchar_t CLASS_NAME[] = L"DX11 IndexBuffer";
 
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -252,7 +295,7 @@ int main()
 
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 VertexBuffer",
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 IndexBuffer",
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, render.m_Width, render.m_Height,
         nullptr, nullptr, hInstance, nullptr);
 
@@ -278,3 +321,4 @@ int main()
     render.Cleanup();
     return 0;
 }
+
