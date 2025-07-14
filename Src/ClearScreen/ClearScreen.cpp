@@ -28,7 +28,7 @@ public:
     uint32_t m_Height{ 820 };
     uint32_t m_FrameCount { 2 };
 
-    void Init(HWND hwnd)
+    void Initialize(HWND hwnd)
     {
         DXGI_SWAP_CHAIN_DESC scd = {};
         scd.BufferCount = m_FrameCount;
@@ -36,7 +36,7 @@ public:
         scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         scd.OutputWindow = hwnd;
         scd.SampleDesc.Count = 1;
-        scd.Windowed = TRUE;
+        scd.Windowed = true;
         scd.BufferDesc.Width = m_Width;
         scd.BufferDesc.Height = m_Height;
 
@@ -60,10 +60,17 @@ public:
 
     void Cleanup()
     {
-        if (renderDevice.swapChain) renderDevice.swapChain->Release();
-        if (renderDevice.renderTargetView) renderDevice.renderTargetView->Release();
-        if (renderDevice.deviceContext) renderDevice.deviceContext->Release();
-        if (renderDevice.device) renderDevice.device->Release();
+        if (renderDevice.swapChain) 
+            renderDevice.swapChain->Release();
+
+        if (renderDevice.renderTargetView) 
+            renderDevice.renderTargetView->Release();
+
+        if (renderDevice.deviceContext) 
+            renderDevice.deviceContext->Release();
+
+        if (renderDevice.device) 
+            renderDevice.device->Release();
     }
 
 };
@@ -82,7 +89,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 int main()
 {
-    Render m_render = {};
+    Render render = {};
 
     HINSTANCE hInstance = GetModuleHandle(nullptr);
     const wchar_t CLASS_NAME[] = L"DX11 ClearScreen";
@@ -95,7 +102,7 @@ int main()
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 ClearScreen",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, m_render.m_Width, m_render.m_Height,
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, render.m_Width, render.m_Height,
         nullptr, nullptr, hInstance, nullptr);
 
     if (!hwnd)
@@ -106,7 +113,7 @@ int main()
 
     ShowWindow(hwnd, SW_SHOW);
 
-    m_render.Init(hwnd);
+    render.Initialize(hwnd);
 
 
     MSG msg = {};
@@ -114,10 +121,10 @@ int main()
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        m_render.Loop();
+        render.Loop();
     }
 
-    m_render.Cleanup();
+    render.Cleanup();
     return 0;
 }
 
