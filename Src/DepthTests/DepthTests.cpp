@@ -1,5 +1,6 @@
-// IndexBuffer.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// DepthTests.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+
 #include <windows.h>
 #include <fstream>
 #include <iostream>
@@ -19,6 +20,9 @@ private:
         IDXGISwapChain* swapChain = nullptr;
         ID3D11RenderTargetView* renderTargetView = nullptr;
 
+        ID3D11DepthStencilView* depthStencilView = nullptr;
+        ID3D11Texture2D* depthStencilBuffer = nullptr;
+
     } renderDevice;
 
     struct Pipeline
@@ -26,6 +30,9 @@ private:
         ID3D11VertexShader* vertexShader = nullptr;
         ID3D11PixelShader* pixelShader = nullptr;
         ID3D11InputLayout* inputLayout = nullptr;
+
+        ID3D11DepthStencilState* depthStencilState = nullptr;
+
 
     } pipeline;
 
@@ -85,7 +92,37 @@ public:
         auto result = renderDevice.device->CreateRenderTargetView(backBuffer, nullptr, &renderDevice.renderTargetView);
         backBuffer->Release();
 
-        renderDevice.deviceContext->OMSetRenderTargets(1, &renderDevice.renderTargetView, nullptr);
+
+
+
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+        depthStencilDesc.DepthEnable = true;
+        depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+        depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+        depthStencilDesc.StencilEnable = false;
+        renderDevice.device->CreateDepthStencilState(&depthStencilDesc, &pipeline.depthStencilState);
+
+
+        // Initialize and set up the description of the depth buffer.
+        D3D11_TEXTURE2D_DESC depthbufferDesc = {};
+        depthbufferDesc.Width = m_Width;
+        depthbufferDesc.Height = m_Height;
+        depthbufferDesc.MipLevels = 1;
+        depthbufferDesc.ArraySize = 1;
+        depthbufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        depthbufferDesc.SampleDesc.Count = 1;
+        depthbufferDesc.SampleDesc.Quality = 0;
+        depthbufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        depthbufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        depthbufferDesc.CPUAccessFlags = 0;
+        depthbufferDesc.MiscFlags = 0;
+
+        renderDevice.device->CreateTexture2D(&depthbufferDesc, NULL, &renderDevice.depthStencilBuffer);
+        renderDevice.device->CreateDepthStencilView(renderDevice.depthStencilBuffer, NULL, &renderDevice.depthStencilView);
+
+
+        renderDevice.deviceContext->OMSetRenderTargets(1, &renderDevice.renderTargetView, renderDevice.depthStencilView);
+        renderDevice.deviceContext->OMSetDepthStencilState(pipeline.depthStencilState, 1);
 
         CreateShaders();
         CreateMesh();
@@ -93,11 +130,23 @@ public:
     }
     void Loop()
     {
+
+
         float color[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
         renderDevice.deviceContext->ClearRenderTargetView(renderDevice.renderTargetView, color);
+        renderDevice.deviceContext->ClearDepthStencilView(renderDevice.depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
         // Viewport
-        D3D11_VIEWPORT view = { 0, 0, m_Width, m_Height, 0.0f, 1.0f };
+        D3D11_VIEWPORT view = { };
+
+        // Fill out the Viewport
+        view.TopLeftX = 0;
+        view.TopLeftY = 0;
+        view.Width = m_Width;
+        view.Height = m_Height;
+        view.MinDepth = 0.0f;
+        view.MaxDepth = 1.0f;
+
         renderDevice.deviceContext->RSSetViewports(1, &view);
 
         renderDevice.deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer.buffer, &vertexBuffer.stride, &vertexBuffer.offset);
@@ -116,21 +165,19 @@ public:
     bool CreateMesh()
     {
 
-
         Vertex vertices[] =
         {
-            {  -0.5f, 0.5f, 0.0f, 1.0f, // POSITION
-                0.9f, 0.0f, 0.0f, 1.0f },     // COLOR
+            // Red Quad
+            { -0.5f,  0.5f, 0.2f, 1.0f,   1.0f, 0.0f, 0.0f, 1.0f },
+            {  0.5f, -0.5f, 0.2f, 1.0f,   1.0f, 0.0f, 0.0f, 1.0f },
+            { -0.5f, -0.5f, 0.2f, 1.0f,   1.0f, 0.0f, 0.0f, 1.0f },
+            {  0.5f,  0.5f, 0.2f, 1.0f,   1.0f, 0.0f, 0.0f, 1.0f },
 
-            {  0.5f, 0.5f, 0.0f, 1.0f,  // POSITION
-                0.0f, 0.9f, 0.0f, 1.0f,},     // COLOR
-
-            { 0.5f, -0.5f, 0.0f,1.0f,  // POSITION
-                0.0f, 0.0f, 0.9f, 1.0f, },      // COLOR
-
-            { -0.5f, -0.5f, 0.0f, 1.0f,  // POSITION
-              1.0f, 0.0f, 1.0f, 1.0f, }      // COLOR
-
+            // Yellow Quad
+            { -0.75f,  0.75f, 0.3f, 1.0f,   1.0f, 1.0f, 0.0f, 1.0f },
+            {  0.0f,   0.0f,  0.3f, 1.0f,   1.0f, 1.0f, 0.0f, 1.0f },
+            { -0.75f,  0.0f,  0.3f, 1.0f,   1.0f, 1.0f, 0.0f, 1.0f },
+            {  0.0f,   0.75f, 0.3f, 1.0f,   1.0f, 1.0f, 0.0f, 1.0f },
         };
 
         D3D11_BUFFER_DESC vertexBufferDesc = {};
@@ -153,13 +200,18 @@ public:
 
 
 
-        uint32_t  indices[] =
+        uint32_t indices[] =
         {
+            // GREEN quad
             0, 1, 2,
-            0, 2, 3
+            0, 3, 1,
+
+            // BLUE quad
+            4, 5, 6,
+            4, 7, 5,
         };
 
-        indexBuffer.count = 6;
+        indexBuffer.count = _countof(indices);
 
         D3D11_BUFFER_DESC indexBufferDesc = {};
         indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -191,8 +243,8 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/DepthTests/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../Assets/Shaders/DepthTests/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);
@@ -285,7 +337,7 @@ int main()
     Render render = {};
 
     HINSTANCE hInstance = GetModuleHandle(nullptr);
-    const wchar_t CLASS_NAME[] = L"DX11 IndexBuffer";
+    const wchar_t CLASS_NAME[] = L"DX11 DepthTests";
 
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -294,7 +346,7 @@ int main()
 
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 IndexBuffer",
+    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 DepthTests",
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, render.m_Width, render.m_Height,
         nullptr, nullptr, hInstance, nullptr);
 

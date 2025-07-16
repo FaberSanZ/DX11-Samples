@@ -205,6 +205,13 @@ public:
 
     void Cleanup()
     {
+
+        if (vertexBuffer.buffer)
+            vertexBuffer.buffer->Release();
+
+        if (pipeline.inputLayout)
+            pipeline.inputLayout->Release();
+
         if (pipeline.vertexShader)
             pipeline.vertexShader->Release();
 
