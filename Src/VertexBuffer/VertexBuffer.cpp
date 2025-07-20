@@ -132,7 +132,7 @@ public:
         initData.SysMemPitch = 0;
         initData.SysMemSlicePitch = 0;
 
-        if (FAILED(renderDevice.device->CreateBuffer(&bd, &initData, &vertexBuffer.buffer)))
+        if (FAILED(renderDevice.device->CreateBuffer(&vertexBufferDesc, &initData, &vertexBuffer.buffer)))
         {
             std::cerr << "Error\n";
             return false;
@@ -148,8 +148,8 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/VertexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/VertexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/VertexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);

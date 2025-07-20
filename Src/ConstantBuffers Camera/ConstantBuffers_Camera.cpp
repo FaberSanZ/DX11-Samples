@@ -377,8 +377,9 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/ConstantBuffersCamera/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/ConstantBuffersCamera/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/ConstantBuffersCamera/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/ConstantBuffersCamera/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);
@@ -424,6 +425,14 @@ public:
 
     void Cleanup()
     {
+        //if (constantBuffer.data)
+        //    constantBuffer.data = nullptr;
+
+        if (constantBuffer.buffer)
+            constantBuffer.buffer->Release();
+
+        if (pipeline.rasterState)
+            pipeline.rasterState->Release();
 
         if (pipeline.depthStencilState)
             pipeline.depthStencilState->Release();

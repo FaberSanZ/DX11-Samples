@@ -191,8 +191,8 @@ public:
         ID3DBlob* psBlob = nullptr;
 
 
-        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
-        CompileShaderFromFile(L"../../Assets/Shaders/IndexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/IndexBuffer/VertexShader.hlsl", "VS", "vs_5_0", &vsBlob);
+        CompileShaderFromFile(L"../../../../Assets/Shaders/IndexBuffer/PixelShader.hlsl", "PS", "ps_5_0", &psBlob);
 
 
         renderDevice.device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &pipeline.vertexShader);
