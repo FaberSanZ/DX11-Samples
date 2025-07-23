@@ -3,6 +3,9 @@
 #include "Device.h"
 #include "Adapter.h"
 #include "CommandList.h"
+#include "Texture.h"
+#include "RenderPass.h"
+#include "Pipeline.h"
 
 #include <iostream>
 #include <dxgi.h>
@@ -15,6 +18,9 @@
 
 namespace Graphics
 {
+	class RenderPass;
+	class Pipeline;
+
 	class CommandList
 	{
 	public:
@@ -22,13 +28,19 @@ namespace Graphics
 		~CommandList() = default;
 		void Initialize(ID3D11DeviceContext* context);
 		void Release();
-		void Clear(ID3D11RenderTargetView* rtv, const float color[4]);
-		void Clear(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv, const float color[4]);
+		void ClearRenderPass(const RenderPass& pass, const float color[4]);
 		void SetViewport(float width, float height);
 
 		void SetVertexBuffer(ID3D11Buffer* buffer, uint32_t slot, uint32_t size, uint32_t stride, void* data);
 		void SetIndexBuffer(ID3D11Buffer* buffer, DXGI_FORMAT format, uint32_t offset);
 		void SetConstantBuffer(ID3D11Buffer* buffer, uint32_t slot, uint32_t size, uint32_t stride, void* data);
+
+		void SetRenderPass(const RenderPass& pass);
+		void SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
+		void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation, int32_t baseVertexLocation);
+
+		void SetPipelineState(const Pipeline& pipelineState);
+
 
 
 	private:

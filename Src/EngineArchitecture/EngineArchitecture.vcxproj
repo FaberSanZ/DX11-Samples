@@ -139,7 +139,10 @@
     <ClCompile Include="Graphics\Buffer.cpp" />
     <ClCompile Include="Graphics\CommandList.cpp" />
     <ClCompile Include="Graphics\Device.cpp" />
+    <ClCompile Include="Graphics\Pipeline.cpp" />
+    <ClCompile Include="Graphics\RenderPass.cpp" />
     <ClCompile Include="Graphics\SwapChain.cpp" />
+    <ClCompile Include="Graphics\Texture.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -147,7 +150,12 @@
     <ClInclude Include="Graphics\Buffer.h" />
     <ClInclude Include="Graphics\CommandList.h" />
     <ClInclude Include="Graphics\Device.h" />
+    <ClInclude Include="Graphics\EngineData.h" />
+    <ClInclude Include="Graphics\Pipeline.h" />
+    <ClInclude Include="Graphics\RenderPass.h" />
     <ClInclude Include="Graphics\SwapChain.h" />
+    <ClInclude Include="Graphics\Texture.h" />
+    <ClInclude Include="Graphics\VertexInputElement.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

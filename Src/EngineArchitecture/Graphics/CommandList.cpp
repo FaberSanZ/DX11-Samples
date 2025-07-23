@@ -29,21 +29,68 @@ namespace Graphics
 		}
 	}
 
-	void CommandList::Clear(ID3D11RenderTargetView* rtv, const float color[4])
+
+	void CommandList::ClearRenderPass(const RenderPass& pass, const float color[4])
 	{
-		if (m_Context && rtv)
+		// TODO: Check if pass is valid
+		TextureData colorData = pass.GetColorTexture().GetData();
+		TextureData depthData = pass.GetDepthTexture().GetData();
+
+		
+		if (colorData.isRenderTarget()) 
+			m_Context->ClearRenderTargetView(pass.GetColorTexture().GetRenderTargetView(), color);
+
+		if (depthData.isDepthStencil()) 
+			m_Context->ClearDepthStencilView(pass.GetDepthTexture().GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	}
+
+
+	void CommandList::SetRenderPass(const RenderPass& pass)
+	{
+		// TODO: Check if pass is valid
+		TextureData colorData = pass.GetColorTexture().GetData();
+		TextureData depthData = pass.GetDepthTexture().GetData();
+
+		ID3D11RenderTargetView* rtvs[8] = {};
+		for (uint32_t i = 0; i < 1; ++i)
+			rtvs[i] = pass.GetColorTexture().GetRenderTargetView();
+
+		if (colorData.isRenderTarget() && depthData.isDepthStencil()) 
+			m_Context->OMSetRenderTargets(1, rtvs, pass.GetDepthTexture().GetDepthStencilView());
+
+		else if (colorData.isRenderTarget() && !depthData.isDepthStencil()) 
+			m_Context->OMSetRenderTargets(1, rtvs, nullptr);
+
+	}
+
+	void CommandList::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology)
+	{
+		if (m_Context)
 		{
-			m_Context->ClearRenderTargetView(rtv, color);
+			m_Context->IASetPrimitiveTopology(topology);
 		}
 	}
-	void CommandList::Clear(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv, const float color[4])
-	{
 
-		if (m_Context && rtv && dsv)
+	void CommandList::DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation, int32_t baseVertexLocation)
+	{
+		if (m_Context)
 		{
-			m_Context->ClearRenderTargetView(rtv, color);
-			m_Context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			m_Context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 		}
+	}
+	void CommandList::SetPipelineState(const Pipeline& pipelineState)
+	{
+		if (pipelineState.GetInputLayout())
+			m_Context->IASetInputLayout(pipelineState.GetInputLayout());
+		if (pipelineState.GetVertexShader())
+			m_Context->VSSetShader(pipelineState.GetVertexShader(), nullptr, 0);
+		if (pipelineState.GetPixelShader())
+			m_Context->PSSetShader(pipelineState.GetPixelShader(), nullptr, 0);
+		if (pipelineState.GetDepthStencilState())
+			m_Context->OMSetDepthStencilState(pipelineState.GetDepthStencilState(), 0);
+		if (pipelineState.GetRasterizerState())
+			m_Context->RSSetState(pipelineState.GetRasterizerState());
+
 	}
 	void CommandList::SetViewport(float width, float height)
 	{
@@ -96,6 +143,8 @@ namespace Graphics
 			}
 		}
 	}
+
+
 
 
 } // namespace Graphics

@@ -3,12 +3,16 @@
 #include <d3d11.h>
 #include <dxgi.h>
 #include <cstdint>
+#include "Device.h"
+#include "EngineData.h"
+#include "RenderPass.h"
 
 #pragma comment(lib, "dxgi.lib")
 
 namespace Graphics
 {
 	class Device;
+	class RenderPass;
 
 	class SwapChain
 	{
@@ -22,10 +26,10 @@ namespace Graphics
 		ID3D11Texture2D* GetBackBuffer() const;
 		ID3D11Texture2D* GetDepthBuffer() const;
 
-		ID3D11RenderTargetView* GetRenderTargetView() const;
-		ID3D11DepthStencilView* GetDepthStencilView() const;
-
 		IDXGISwapChain* GetSwapChain() const { return m_SwapChain; }
+		RenderPass& GetRenderPass() { return m_RenderPass; }
+
+
 
 	private:
 		IDXGISwapChain* m_SwapChain = nullptr;
@@ -35,6 +39,8 @@ namespace Graphics
 		
 		ID3D11RenderTargetView* renderTargetView = nullptr;
 		ID3D11DepthStencilView* depthStencilView = nullptr;
+
+		RenderPass m_RenderPass;
 	};
 }
 

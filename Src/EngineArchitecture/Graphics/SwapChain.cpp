@@ -1,9 +1,10 @@
-#include "SwapChain.h"
-#include "Device.h"
-#include "Adapter.h"
 
-#include <iostream>
+#include <d3d11.h>
 #include <dxgi.h>
+#include <cstdint>
+#include "Device.h"
+#include "EngineData.h"
+#include "SwapChain.h"
 
 namespace Graphics
 {
@@ -12,7 +13,7 @@ namespace Graphics
 		ID3D11Device* d3dDevice = device.GetDevice();
 		if (!d3dDevice)
 		{
-			std::cerr << "[SwapChain] Device is null.\n";
+			//std::cerr << "[SwapChain] Device is null.\n";
 			return false;
 		}
 
@@ -20,7 +21,7 @@ namespace Graphics
 		IDXGIDevice* dxgiDevice = nullptr;
 		if (FAILED(d3dDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice)))
 		{
-			std::cerr << "[SwapChain] Failed to query IDXGIDevice.\n";
+			//std::cerr << "[SwapChain] Failed to query IDXGIDevice.\n";
 			return false;
 		}
 
@@ -52,11 +53,11 @@ namespace Graphics
 
 		if (FAILED(hr))
 		{
-			std::cerr << "[SwapChain] Failed to create swap chain.\n";
+			//std::cerr << "[SwapChain] Failed to create swap chain.\n";
 			return false;
 		}
 
-		std::cout << "[SwapChain] Created successfully.\n";
+		//std::cout << "[SwapChain] Created successfully.\n";
 
 
 		// Create a render target view for the back buffer
@@ -90,8 +91,28 @@ namespace Graphics
 		d3dDevice->CreateTexture2D(&depthbufferDesc, NULL, &depthBuffer);
 		d3dDevice->CreateDepthStencilView(depthBuffer, NULL, &depthStencilView);
 
+
+		// --- Inicializar FrameBuffer ---
+		TextureData data = {};
+		data.width = static_cast<float>(width);
+		data.height = static_cast<float>(height);
+		data.flags = static_cast<TextureFlags>(static_cast<int>(TextureFlags::RenderTarget) | static_cast<int>(TextureFlags::DepthStencil));
+		data.iswapChain = true;
+
+
+		// RederPass initialization
+		m_RenderPass.m_Color.InitializeFromSwapChain(data, renderTargetView, depthStencilView, backBuffer);
+		m_RenderPass.m_Depth.InitializeFromSwapChain(data, renderTargetView, depthStencilView, depthBuffer);
+		
+		
+
+
 		return true;
 	}
+
+
+
+
 
 	void SwapChain::Present(bool vsync)
 	{
@@ -118,15 +139,6 @@ namespace Graphics
 		return depthBuffer;
 	}
 
-	ID3D11RenderTargetView* SwapChain::GetRenderTargetView() const
-	{
-		return renderTargetView;
-	}
-
-	ID3D11DepthStencilView* SwapChain::GetDepthStencilView() const
-	{
-		return depthStencilView;
-	}
 
 	SwapChain::~SwapChain()
 	{
