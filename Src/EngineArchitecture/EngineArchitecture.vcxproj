@@ -135,6 +135,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\RenderSystem.cpp" />
+    <ClCompile Include="Core\Windows.cpp" />
     <ClCompile Include="Graphics\Adapter.cpp" />
     <ClCompile Include="Graphics\Buffer.cpp" />
     <ClCompile Include="Graphics\CommandList.cpp" />
@@ -146,6 +148,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\RenderSystem.h" />
+    <ClInclude Include="Core\Windows.h" />
     <ClInclude Include="Graphics\Adapter.h" />
     <ClInclude Include="Graphics\Buffer.h" />
     <ClInclude Include="Graphics\CommandList.h" />

@@ -14,6 +14,7 @@
 #include "Graphics/Buffer.h"
 #include "Graphics/Texture.h"
 #include "Graphics/Pipeline.h"
+#include "Core/Windows.h"
 
 
 #pragma comment(lib, "d3d11.lib")
@@ -298,82 +299,19 @@ public:
 };
 
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-    case WM_CLOSE:
-        PostQuitMessage(0);
-        return 0;
-    }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-
 int main()
 {
     Render render = {};
 
-    HINSTANCE hInstance = GetModuleHandle(nullptr);
-    const wchar_t CLASS_NAME[] = L"DX11 EngineArchitecture";
 
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
-
-    RegisterClass(&wc);
-
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"DX11 EngineArchitecture",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, render.m_Width, render.m_Height,
-        nullptr, nullptr, hInstance, nullptr);
-
-    if (!hwnd)
+    Core::Windows windows {};
+	windows.Initialize();
+    windows.RenderLoop([&]() 
     {
-        std::cerr << "Error:\n";
-        return -1;
-    }
+        render.Loop();
+        render.UpdateCamera(); 
+    });
 
-    ShowWindow(hwnd, SW_SHOW);
-
-    render.Initialize(hwnd);
-
-    MSG msg = {};
-
-    // Loop until there is a quit message from the window or the user.
-    bool done { false };
-
-
-
-    while (!done)
-    {
-        // Handle the windows messages.
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-
-        // If windows signals to end the application then exit out.
-        if (msg.message == WM_QUIT)
-        {
-            done = true;
-        }
-        else
-        {
-            // Otherwise do the frame processing.
-            render.Loop();
-            render.UpdateCamera(); // Update camera matrices each frame
-        }
-
-    }
-
-
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-
-    }
 
     render.Cleanup();
     return 0;
