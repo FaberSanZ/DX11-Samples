@@ -12,7 +12,6 @@ This is designed for the DirectX 11 learning process, I mainly use it to experim
 
 
 
-
 ## Examples
 
 
