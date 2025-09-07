@@ -8,7 +8,7 @@
 
 
 ## 📝 Overview
-This is designed for the DirectX 11 learning process, I mainly use it to experiment with graphical or computing techniques and should not be used as a cerium product as it may have memory leaks and faulty or poorly optimized implementations
+This is designed for the DirectX 11 learning process, I mainly use it to experiment with graphical or computing techniques and should not be used as a cerium product as it may have memory leaks and faulty or poorly optimized implementations.
 
 
 
