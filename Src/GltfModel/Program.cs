@@ -251,9 +251,7 @@ internal sealed class RenderSystem : IDisposable
         Quaternion rotation = new(node.Rotation[0], node.Rotation[1], node.Rotation[2], node.Rotation[3]);
         Vector3 translation = new(node.Translation[0], node.Translation[1], node.Translation[2]);
 
-        return Matrix4x4.CreateScale(scale) *
-               Matrix4x4.CreateFromQuaternion(rotation) *
-               Matrix4x4.CreateTranslation(translation);
+        return Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
     }
 
     private static Vector3[] ReadVector3Accessor(Gltf model, int accessorIndex, string filePath)
